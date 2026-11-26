@@ -14,18 +14,38 @@ function showSaved() {
     const label = button.querySelector('[data-save-label]');
     if (label) label.textContent = active ? 'Salvată' : 'Salvează';
   }
-  for (const row of document.querySelectorAll('[data-saved-row]')) row.hidden = !saved.has(row.dataset.savedRow);
-  const empty = document.querySelector('#empty-list');
-  if (empty) empty.hidden = !!document.querySelector('[data-saved-row]:not([hidden])');
+  const list = document.querySelector('#saved-venues');
+  if (!list) return;
+  const rows = [];
+  for (const [name, , , href] of window.directoryIndex || []) {
+    const slug = href.replace(/\.html$/, '');
+    if (!saved.has(slug)) continue;
+    const row = document.createElement('li');
+    row.dataset.savedRow = slug;
+    const link = document.createElement('a');
+    link.href = href;
+    const label = document.createElement('strong');
+    label.textContent = name;
+    link.append(label);
+    const remove = document.createElement('button');
+    remove.className = 'save';
+    remove.dataset.save = slug;
+    remove.setAttribute('aria-label', 'Elimină ' + name + ' din listă');
+    remove.textContent = 'Elimină din listă';
+    row.append(link, remove);
+    rows.push(row);
+  }
+  list.replaceChildren(...rows);
+  document.querySelector('#empty-list').hidden = rows.length > 0;
 }
-for (const button of document.querySelectorAll('[data-save]')) {
-  button.addEventListener('click', () => {
-    const id = button.dataset.save;
-    if (saved.has(id)) saved.delete(id); else saved.add(id);
-    try { localStorage.setItem(savedKey, JSON.stringify([...saved])); } catch {}
-    showSaved();
-  });
-}
+document.addEventListener('click', event => {
+  const button = event.target.closest('[data-save]');
+  if (!button) return;
+  const id = button.dataset.save;
+  if (saved.has(id)) saved.delete(id); else saved.add(id);
+  try { localStorage.setItem(savedKey, JSON.stringify([...saved])); } catch {}
+  showSaved();
+});
 window.addEventListener('storage', () => { saved = loadSaved(); showSaved(); });
 window.addEventListener('pageshow', () => { saved = loadSaved(); showSaved(); });
 showSaved();

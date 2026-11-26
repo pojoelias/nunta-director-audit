@@ -2,6 +2,9 @@ const locality = document.querySelector('#localitate');
 const entries = [...document.querySelectorAll('[data-locality]')];
 locality.addEventListener('change', () => {
   for (const entry of entries) entry.hidden = Boolean(locality.value && entry.dataset.locality !== locality.value);
+  for (const group of document.querySelectorAll('[data-town-group]')) {
+    group.hidden = !group.querySelector('[data-locality]:not([hidden])');
+  }
   const count = entries.filter(entry => !entry.hidden).length;
   document.querySelector('#rezultat').textContent = count === 1 ? '1 locație în selecție' : count + ' locații în selecție';
 });
