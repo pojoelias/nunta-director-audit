@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://pojoelias.github.io/nunta-director-audit/sitemap.xml

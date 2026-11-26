@@ -1,0 +1,7 @@
+<svg class="stars" viewBox="0 0 122 24" aria-hidden="true"><defs>
+<path id="sp" d="M12 1.5c.9 5.6 3.6 8.4 9.6 10.5-6 2.1-8.7 4.9-9.6 10.5-.9-5.6-3.6-8.4-9.6-10.5 6-2.1 8.7-4.9 9.6-10.5Z"/>
+<linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#c99a45"/><stop offset=".5" stop-color="#e2b866"/><stop offset="1" stop-color="#b98a3a"/></linearGradient>
+<clipPath id="cp"><rect class="fill" width="{{FILLW}}" height="24"/></clipPath></defs>
+<g class="base"><use href="#sp"/><use href="#sp" x="25"/><use href="#sp" x="50"/><use href="#sp" x="75"/><use href="#sp" x="100"/></g>
+<g clip-path="url(#cp)" fill="url(#gg)"><use href="#sp"/><use href="#sp" x="25"/><use href="#sp" x="50"/><use href="#sp" x="75"/><use href="#sp" x="100"/></g>
+<g class="glint" fill="#fff"><path d="M90 3l1 3 3 1-3 1-1 3-1-3-3-1 3-1Z"/></g></svg>
