@@ -162,4 +162,4 @@ details::details-content{block-size:0;overflow:hidden;transition:block-size .35s
 @media(max-width:820px){.hero .frame img{aspect-ratio:4/3}.mast nav{gap:5px 14px}.mast nav a{display:inline-flex;align-items:center;min-height:40px}.space,.space:first-child{display:grid}.space svg{width:65px}.foot{padding-bottom:90px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.btn:hover,.btn:hover svg,.rows a:hover strong{transform:none}}
 @media print{.dock,.mylist,.ribbon,.save{display:none!important}h1{color:var(--ink);background:none}}
-.hero .atlas .frame,.hero .atlas .frame img{border-radius:18px}.hero .atlas .frame img{aspect-ratio:1;object-fit:contain;animation:none}.sources a{overflow-wrap:anywhere}.hero h1,.bodycopy h2{overflow-wrap:anywhere}
+.access-notice{border-left:3px solid var(--clay);padding:12px 16px;margin:16px 0}.access-notice p{margin:.4em 0}.hero .atlas .frame,.hero .atlas .frame img{border-radius:18px}.hero .atlas .frame img{aspect-ratio:1;object-fit:contain;animation:none}.sources a{overflow-wrap:anywhere}.hero h1,.bodycopy h2{overflow-wrap:anywhere}
