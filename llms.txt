@@ -1,0 +1,10 @@
+# Locație Nuntă
+
+> Director de proprietăți din România pentru explorarea unei nunți în aer liber. Capacitățile de ceremonie, cină și ploaie sunt documentate separat.
+
+- [Căutare](https://pojoelias.github.io/nunta-director-audit/)
+- [București și Ilfov](https://pojoelias.github.io/nunta-director-audit/zona-bucuresti-ilfov.html)
+- [Instrumente gratuite](https://pojoelias.github.io/nunta-director-audit/instrumente.html)
+- [Metodologie](https://pojoelias.github.io/nunta-director-audit/metodologie.html)
+- [Despre director](https://pojoelias.github.io/nunta-director-audit/despre-noi.html)
+- [Lista paginilor indexabile](https://pojoelias.github.io/nunta-director-audit/sitemap.xml)

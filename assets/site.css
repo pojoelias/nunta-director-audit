@@ -15,6 +15,13 @@
 
 .maps-actions{display:flex;flex-wrap:wrap;align-items:center;gap:0 16px;margin:4px 0;font-size:14px}
 .maps-actions a{display:inline-flex;align-items:center;min-height:44px;text-decoration-thickness:1px}
+.mast nav[hidden],.menu-toggle[hidden]{display:none}
+@media(max-width:700px){
+.mast{position:relative;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px}.mast .brand em{display:inline}
+.menu-toggle{font:600 15px var(--sans);min-height:44px;border:1px solid var(--rule);padding:4px 13px;border-radius:9px;background:var(--paper);color:var(--ink)}
+.mast nav:not([hidden]){flex:1 0 100%;display:flex;flex-wrap:wrap;gap:4px 14px;padding:5px 0}
+.mast nav a{min-height:44px;display:inline-flex;align-items:center}
+}
 @font-face {
   font-family: 'Pinyon Script';
   font-style: normal;

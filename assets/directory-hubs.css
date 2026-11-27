@@ -16,3 +16,74 @@
 @media(max-width:760px){.dir-home{grid-template-columns:minmax(0,1fr);gap:14px}.dir-art{max-height:245px;width:100%;border-radius:100px 100px 4px 4px}.dir-input button{padding-inline:14px}}
 .dir-art{position:relative}.dir-art figcaption{position:absolute;bottom:12px;right:12px;padding:3px 8px;background:#f8f5ecef;color:#193829;border-radius:4px;font:11px/1.5 var(--sans)}
 .dir-filter{display:flex;align-items:center;gap:8px 14px;flex-wrap:wrap}.dir-filter select{max-width:100%;font:inherit;padding:9px 12px;color:var(--ink);border:1px solid var(--rule);background:var(--paper2);border-radius:8px}.dir-venue-rows [hidden]{display:none}#countyMap:not([hidden]){height:330px;margin-bottom:16px}
+
+/* Homepage scroll story: sketch → colour → garden → table → search.
+   The stage is pinned full-screen while four chapters scroll over it. home-story.js sets
+   --p (0–1 through the film), --dream (1 on the sketch, 0 once the garden is real), and per
+   chapter --focus; the finale gets --pop as the search card rises. Only opacity/transform animate. */
+body:has(.home-story) .crumb{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+body:has(.home-story) .shell{position:relative}
+body:has(.home-story) .mast{position:absolute;z-index:5;inset:0 0 auto;padding-inline:inherit;border-bottom-color:transparent;background:linear-gradient(#f8f5ecd9,#f8f5ec00)}
+.home-story{overflow-x:clip;--p:0;--dream:1;position:relative;margin-inline:calc(50% - 50vw);margin-top:0}
+.story-stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;background:#f1e9da;perspective:900px}
+.story-film{position:absolute;inset:-2%;transform:scale(calc(1.02 + var(--p) * .14)) translate3d(0,calc(var(--p) * -1.5%),0);transform-origin:46% 55%;will-change:transform}
+.story-film img,.story-film canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:46% 50%}
+.story-film canvas{opacity:0;transition:opacity .4s}.story-film canvas.ready{opacity:1}
+/* Dream layers: paper grain and a warm wash that lift as the drawing becomes real. */
+.story-paper{position:absolute;inset:0;pointer-events:none;opacity:calc(var(--dream) * .55);mix-blend-mode:multiply;
+ background:radial-gradient(120% 90% at 50% 45%,transparent 55%,#c9b79a 100%),repeating-radial-gradient(circle at 30% 20%,#0000 0 2px,#7a5f3a0d 2px 3px)}
+.story-shade{position:absolute;inset:0;pointer-events:none;opacity:calc(1 - var(--dream));background:linear-gradient(90deg,rgba(18,30,21,.62),rgba(18,30,21,.18) 46%,transparent 70%),linear-gradient(0deg,rgba(18,30,21,.45),transparent 35%)}
+.story-credit{position:absolute;z-index:2;right:14px;bottom:12px;font-size:11px;color:#fff;background:#1d2b21a6;padding:2px 7px;border-radius:4px}
+.story-dots{position:absolute;z-index:2;right:clamp(14px,3vw,36px);top:50%;transform:translateY(-50%);display:grid;gap:12px;list-style:none;margin:0;padding:0}
+.story-dots li{width:8px;height:8px;border-radius:50%;background:#fff;opacity:.45;box-shadow:0 0 0 1px #1d2b2155;transition:opacity .3s,transform .3s}
+.story-dots li[aria-current]{opacity:1;transform:scale(1.5)}
+/* Chapters scroll over the pinned stage. */
+.story-chapters{position:relative;z-index:3;margin-top:-100vh;margin-top:-100svh;pointer-events:none}
+.story-chapter{--focus:1;min-height:115vh;min-height:115svh;display:flex;align-items:center;padding:0 max(6vw,calc((100% - 1180px)/2))}
+.story-chapter>div{max-width:34rem;pointer-events:auto;opacity:var(--focus);transform:translate3d(0,calc((1 - var(--focus)) * 40px),0)}
+.story-chapter .kicker{font:600 12px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+.story-chapter .kicker:after{content:"";width:44px;border-top:1px solid currentColor;opacity:.6}
+.story-chapter h2{font:normal clamp(40px,5.4vw,76px)/1 var(--serif);letter-spacing:-.03em;margin:0 0 16px}
+.story-chapter p{font:clamp(19px,1.7vw,24px)/1.4 var(--serif);margin:0}
+.story-intro{min-height:100vh;min-height:100svh;align-items:flex-end;padding-bottom:12vh}
+.story-intro h1{font:normal clamp(46px,7vw,104px)/.96 var(--serif);letter-spacing:-.045em;margin:0 0 14px;color:var(--ink)}
+.story-intro .script{font:clamp(30px,3.4vw,46px)/1 'Pinyon Script',var(--serif);color:var(--clay);margin:0 0 4px}
+.story-intro p.lead{color:#3c4a3f;max-width:28ch}
+.story-cue{display:inline-flex;align-items:center;gap:10px;margin-top:22px;font:600 14px var(--sans);color:var(--ink);text-decoration:none}
+.story-cue span{display:inline-block;animation:cue 1.8s ease-in-out infinite}
+@keyframes cue{50%{transform:translateY(6px)}}
+.story-ink{color:var(--ink)}.story-ink .kicker{color:var(--clay)}
+.story-light{color:#fffaf0;text-shadow:0 1px 18px #10201699}.story-light .kicker{color:#f3d9c8}
+/* Finale: the search rises out of the table scene. */
+.story-finale{min-height:150vh;min-height:150svh;align-items:flex-start;justify-content:center;padding-top:22vh}
+.story-finale .home-search{--pop:1;position:sticky;top:18vh;max-width:720px;width:100%;margin:0;padding:clamp(22px,3.4vw,40px);border-radius:22px;
+ background:rgba(248,245,236,.86);-webkit-backdrop-filter:blur(14px) saturate(1.1);backdrop-filter:blur(14px) saturate(1.1);box-shadow:0 30px 80px -30px #0d1a1199,0 0 0 1px #fff6;
+ opacity:var(--pop);transform:translate3d(0,calc((1 - var(--pop)) * 70px),0) scale(calc(.9 + var(--pop) * .1));transform-origin:50% 100%}
+.home-search h2{font:normal clamp(34px,4.4vw,56px)/1.05 var(--serif);margin:0 0 8px;color:var(--ink)}
+.home-search p{font:16px/1.55 var(--sans);color:var(--sub);margin:0 0 4px}
+.home-search form{display:block;margin:18px 0 4px}.home-search form[hidden]{display:none}
+.home-search label{display:block;font-size:15px;font-weight:600;margin-bottom:6px}
+.home-search .dir-input{background:#fff;box-shadow:0 8px 24px -14px #19382966}
+.home-search .dir-browse{margin-top:7px}
+/* Without the film (reduced motion, Save-Data, no JS): a still opening, then plain sections. */
+.static-story .story-chapters{margin-top:0;background:var(--paper)}
+.static-story .story-stage{position:relative;height:min(78svh,720px)}
+.static-story .story-chapter{min-height:0;padding-block:36px}.static-story .story-chapter>div{opacity:1;transform:none}
+.static-story .story-intro{position:relative;margin-top:calc(-1 * min(78svh,720px));height:min(78svh,720px);min-height:0;align-items:flex-end;padding-bottom:6vh}
+.static-story .story-finale .home-search{opacity:1;transform:none;position:relative;top:0}
+.static-story .story-light{color:var(--ink);text-shadow:none}.static-story .story-light .kicker{color:var(--clay)}
+@media(max-width:760px){
+ .story-chapter{padding:0 20px;align-items:flex-end;padding-bottom:14vh}
+ .story-chapter>div{background:rgba(248,245,236,.84);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:18px 18px 20px;border-radius:16px;color:var(--ink);text-shadow:none}
+ .story-chapter .kicker{color:var(--clay)}
+ .story-intro>div{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;padding:0}
+ .story-intro{padding-bottom:9vh}.story-dots{display:none}
+ .story-finale{padding:0 14px;align-items:flex-start;padding-top:14vh}.story-finale .home-search{top:12vh}
+ .story-shade{background:linear-gradient(0deg,rgba(18,30,21,.35),transparent 40%)}
+}
+@media(prefers-reduced-motion:reduce){.story-cue span{animation:none}.story-film{transform:none}}
+.story-right{justify-content:flex-end}
+.story-ink>div{position:relative;isolation:isolate}
+.story-ink>div:before{content:"";position:absolute;inset:-70px -90px;z-index:-1;border-radius:50%;background:radial-gradient(closest-side,rgba(248,243,232,.94),rgba(248,243,232,.78) 55%,rgba(248,243,232,0));pointer-events:none}
+@media(max-width:760px){.story-ink>div:before{display:none}.story-right{justify-content:flex-start}}
+.story-cue{min-height:48px;display:inline-flex;align-items:center;padding:9px 6px}

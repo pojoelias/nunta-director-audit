@@ -11,8 +11,8 @@
     if (!loading) loading = new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = 'assets/directory-index.js';
-      script.onload = () => resolve(window.directoryIndex.map(([name, town, county, href]) => ({
-        name, town, county, href, key:normalize(name), area:normalize(town+' '+county)
+      script.onload = () => resolve(window.directoryIndex.map(([name, town, county, href, aliases = '']) => ({
+        name, town, county, href, key:normalize(name), area:normalize(town+' '+county+' '+aliases)
       })));
       script.onerror = () => { loading = undefined; reject(new Error('index')); };
       document.head.append(script);
@@ -41,11 +41,17 @@
       const index = await loadIndex();
       if (seq !== version) return;
       const tokens = term.split(' ');
-      results = index.filter(r => tokens.every(t => (r.key + ' ' + r.area).includes(t)));
+      const metroSearch = term === 'bucuresti' || term === 'bucuresti ilfov' || term === 'ilfov bucuresti';
+      results = metroSearch ? index.filter(r => ['București', 'Ilfov'].includes(r.county))
+        : index.filter(r => tokens.every(t => (r.key + ' ' + r.area).includes(t)));
       function rank(r) { return r.key === term ? 0 : r.key.startsWith(term) ? 1 : r.key.includes(term) ? 2 : 3; }
       results.sort((a,b) => rank(a)-rank(b));
       status.textContent = results.length === 0 ? 'Nicio locație găsită. Încearcă numele localității sau alege un județ mai jos.'
         : results.length === 1 ? 'O locație găsită.' : results.length + (results.length%100>=20 || results.length%100===0 ? ' de' : '') + ' locații găsite.';
+      if (metroSearch) {
+        const cityCount = results.filter(r => r.county === 'București').length;
+        status.textContent += ' În municipiul București: ' + cityCount + '. În județul Ilfov: ' + (results.length - cityCount) + '.';
+      }
       showBatch();
     } catch {
       if (seq === version) status.textContent = 'Căutarea nu s-a încărcat. Poți explora locațiile după județ mai jos.';
@@ -55,11 +61,11 @@
   let timer;
   input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(search, 100); });
   form.addEventListener('submit', e => {
-    e.preventDefault(); clearTimeout(timer); search();
+    e.preventDefault(); clearTimeout(timer);
     const url = new URL(location.href);
     if (input.value.trim()) url.searchParams.set('q',input.value.trim()); else url.searchParams.delete('q');
     try { history.replaceState(null,'',url); } catch {}
-    if (!section.hidden) section.scrollIntoView({block:'start'});
+    search().then(() => { if (!section.hidden) { section.scrollIntoView({block:'start'}); document.getElementById('results-caption').focus({preventScroll:true}); } });
   });
   more.addEventListener('click', showBatch);
   input.value = (new URLSearchParams(location.search).get('q') || '').slice(0,160);

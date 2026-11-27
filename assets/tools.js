@@ -5,6 +5,7 @@ const currency = (n,unit) => new Intl.NumberFormat('ro-RO', {style:'currency', c
 function field(label, input) { const node = el('label', label); node.append(input); return node; }
 function option(label, value) { return new Option(label,value); }
 function amount(id) { const v = byId(id); return v.reportValidity && v.validity.valid && v.value.trim() !== '' ? v.valueAsNumber : NaN; }
+if (byId('buget')) {
 const allocations = [['Locație și mobilier',20],['Catering și băuturi',40],['Muzică și sonorizare',10],['Fotografie și film',10],['Decor și flori',7],['Coordonare',5],['Rezervă și alte cheltuieli',8]];
 const budgetRows = allocations.map(([name,value]) => {
   const row = el('div'); row.className = 'allocation';
@@ -20,39 +21,93 @@ function updateBudget() {
 }
 byId('budgetCurrency').addEventListener('change',updateBudget);
 byId('totalBudget').addEventListener('input',updateBudget); updateBudget();
+}
+if (byId('cost')) {
 function updateCost(){
   const money=n=>currency(n,byId('costCurrency').value);
-  const [fixed,meal,bar,other,n,m]=['fixed','meal','bar','extras','headcount','alternative'].map(amount);
-  if (![fixed,meal,bar,other,n,m].every(Number.isFinite)) {byId('guestResult').textContent='Completează sumele și un număr întreg de cel puțin un invitat pentru fiecare scenariu.';return;}
-  const variable=meal+bar+other,total=fixed+n*variable,diff=(m-n)*variable;
-  byId('guestResult').textContent='Total: '+money(total)+' · '+money(total/n)+' / invitat. Pentru '+m+' invitați: '+money(fixed+m*variable)+' ('+(diff===0?'același cost':money(Math.abs(diff))+(diff<0?' mai puțin':' în plus'))+').';
+  const [fixed,meal,bar,other,n,m,minimum]=['fixed','meal','bar','extras','headcount','alternative','minimumMeals'].map(amount);
+  if (![fixed,meal,bar,other,n,m,minimum].every(Number.isFinite)) {byId('guestResult').textContent='Completează sumele și un număr întreg de cel puțin un invitat pentru fiecare scenariu.';return;}
+  const totalFor=guests=>fixed+Math.max(guests,minimum)*meal+guests*(bar+other);
+  const total=totalFor(n),diff=totalFor(m)-total;
+  byId('guestResult').textContent='Total: '+money(total)+' · '+money(total/n)+' / invitat. Pentru '+m+' invitați: '+money(totalFor(m))+' ('+(diff===0?'același cost':money(Math.abs(diff))+(diff<0?' mai puțin':' în plus'))+').';
 }
 byId('cost').addEventListener('input',updateCost);updateCost();
-const directory=[...window.locatii].sort((a,b)=>a.name.localeCompare(b.name,'ro'));
-const indexed=new Map(directory.map(v=>[v.id,v]));const compareSelects=[];
+}
+if (byId('comparatie')) {
+const indexed = new Map(), compareSelects = [], offerInputs=[];
+const preselected = new URLSearchParams(location.search).get('locatie');
+const message = el('p', 'Alege o locație pentru a încărca lista.'); message.setAttribute('role','status');
+const summary=el('p'); summary.className='answer';summary.setAttribute('aria-live','polite');summary.hidden=true;
+function compareTotals(){
+  const quotes=offerInputs.map(({select,price})=>({name:indexed.get(select.value)?.name,price:price.value.trim() && price.validity.valid ? price.valueAsNumber : NaN})).filter(v=>v.name && Number.isFinite(v.price)).sort((a,b)=>a.price-b.price);
+  summary.hidden=quotes.length<2;
+  if(summary.hidden)return;
+  const low=quotes[0].price, high=quotes[quotes.length-1].price;
+  const cheapest=quotes.filter(q=>q.price===low).map(q=>q.name).join(', ');
+  summary.textContent=high===low?'Ofertele introduse au același total: '+currency(low,'RON')+'.':'Totalul cel mai mic: '+currency(low,'RON')+' ('+cheapest+'). Diferența până la oferta cea mai mare: '+currency(high-low,'RON')+'.';
+}
+let ready;
+
 function compareChoices(){
  const taken=compareSelects.map(s=>s.value).filter(Boolean);
  for(const s of compareSelects) for(const o of s.options)o.disabled=Boolean(o.value && o.value!==s.value && taken.includes(o.value));
 }
 for(let n=1;n<=3;n++){
   const box=el('article'), select=el('select'),facts=el('p'),price=el('input'),notes=el('textarea');
-  select.append(option('Alege locația',''));for(const v of directory)select.append(option(v.name+' · '+v.county,v.id));
-  price.type='number';price.min='0';price.step='.01';notes.rows=2;
+  select.append(option('Alege locația',''));
+  price.type='number';price.min='0';price.step='.01';notes.rows=2;offerInputs.push({select,price});price.addEventListener('input',compareTotals);
   box.append(field('Locația '+n,select),facts,field('Oferta totală (lei)',price),field('Condiții și servicii incluse',notes));byId('compare').append(box);compareSelects.push(select);
   select.addEventListener('change',()=>{const v=indexed.get(select.value);facts.replaceChildren();price.value='';notes.value='';
-    if(v){for(const [k,label] of [['ceremony','Cununie așezată'],['dinner','Cină cu dans'],['rain','Plan de ploaie']])facts.append(el('span',label+': '+(v[k]?v[k]+' locuri':'De confirmat')),el('br'));const actions=el('span');actions.className='maps-actions';for(const [label,url] of [['Vezi pe Google Maps',v.url],['Indicații de orientare',v.directions]]){const a=el('a',label);a.href=url;actions.append(a);}facts.append(actions);}
-    compareChoices();
+    if(v){for(const [k,label] of [['ceremony_max','Cununie așezată'],['outdoor_dinner_with_dancing_max','Cină cu dans'],['rain_backup_seated_max','Plan de ploaie']])facts.append(el('span',label+': '+(v[k]?v[k]+' locuri':'De confirmat')),el('br'));const actions=el('span');actions.className='maps-actions';const a=el('a','Deschide fișa locației');a.href=v.href || v.url;actions.append(a);facts.append(actions);}
+    compareChoices();compareTotals();
   });
 }
+byId('compare').before(message);byId('compare').after(summary);
+function loadChoices() {
+  if (!ready) {
+    message.textContent='Se încarcă lista locațiilor…';
+    const fetchData = window.locatii ? Promise.resolve(window.locatii) : window.loadPlanningVenues();
+    ready = fetchData.then(data => {
+      const directory = [...data].sort((a,b)=>a.name.localeCompare(b.name,'ro'));
+      for(const v of directory) {
+        const id = v.place_id || v.id;
+        indexed.set(id,{...v,ceremony_max:v.ceremony_max || v.ceremony,outdoor_dinner_with_dancing_max:v.outdoor_dinner_with_dancing_max || v.dinner,rain_backup_seated_max:v.rain_backup_seated_max || v.rain});
+        for(const select of compareSelects)select.append(option(v.name+' · '+v.county,id));
+      }
+      message.hidden=true;
+      if(indexed.has(preselected)) {
+        compareSelects[0].value=preselected;
+        compareSelects[0].dispatchEvent(new Event('change'));
+      } else if (preselected) {
+        message.textContent='Locația solicitată nu apare în director. Alege una din listă.';message.hidden=false;
+      }
+    }).catch(()=>{
+      ready=undefined; message.replaceChildren(document.createTextNode('Lista locațiilor nu s-a încărcat. '));
+      const retry=el('button','Încearcă din nou'); retry.type='button';retry.onclick=loadChoices;message.append(retry);message.hidden=false;
+    });
+  }
+  return ready;
+}
+for(const select of compareSelects) {
+  // Pointerdown starts loading before opening choices; focus also covers the keyboard.
+  select.addEventListener('focus',loadChoices);select.addEventListener('pointerdown',loadChoices);
+}
+if(preselected)loadChoices();
+else if(window.requestIdleCallback)requestIdleCallback(loadChoices,{timeout:2000});
+else setTimeout(loadChoices,0);
+}
+if (byId('vizionare')) {
 const questions=['Capacitate cu scaune la ceremonie și culoar de acces','Locuri la masă cu ring de dans și spațiu pentru muzicieni','Spațiu acoperit rezervat, capacitate și cost','Exclusivitate, oră de încheiere și limite pentru muzică','Acces fără trepte, toalete, parcare și transport','Catering extern, băuturi, taxe și meniuri speciale','Curent pentru furnizori, iluminat, montaj și demontare','Avans, anulare, reprogramare și termenul ofertei'];
 for(const q of questions){const label=el('label'),input=el('input');input.type='checkbox';label.className='check';label.append(input,document.createTextNode(q));byId('checklist').append(label);}
+}
 for(const button of document.querySelectorAll('[data-print]'))button.onclick=()=>{document.body.dataset.printSection=button.closest('.worksheet').id;window.print();};
 window.addEventListener('afterprint',()=>delete document.body.dataset.printSection);
 
+if (byId('mese')) {
 const key='nunta-plan-mese-v1';let state={tables:[],guests:[]}, selected='', moving=null;
 try {const saved=JSON.parse(localStorage.getItem(key));if(saved&&Array.isArray(saved.guests)&&Array.isArray(saved.tables))state=saved;} catch {}
 function save(){try{localStorage.setItem(key,JSON.stringify(state));}catch{byId('seatStatus').append(' Salvarea în browser este indisponibilă.');}}
-const uid=()=>crypto.randomUUID();
+const uid=()=>globalThis.crypto?.randomUUID?.() || [Date.now(),Math.random().toString(36).slice(2)].join('-');
 const occupancy=id=>state.guests.filter(g=>g.table===id).length;
 function tableName(t){return 'Masa '+t.number;}
 function refresh(){
@@ -77,3 +132,5 @@ byId('addGuests').onsubmit=e=>{e.preventDefault();for(const name of byId('guestN
 byId('clearGuests').onclick=()=>{if(confirm('Ștergi lista invitaților și planul meselor din acest browser?')){state={tables:[],guests:[]};selected='';refresh();save();}};
 byId('exportGuests').onclick=()=>{const quote=s=>'"'+(/^[=+@\-\t\r]/.test(s)?"'":'')+s.replaceAll('"','""')+'"';const rows=[['Invitat','Confirmare','Masă'],...state.guests.map(g=>[g.name,g.rsvp,state.tables.find(t=>t.id===g.table)?tableName(state.tables.find(t=>t.id===g.table)):''])];const a=el('a');a.download='invitati-si-mese.csv';a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(row=>row.map(quote).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'}));a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};
 refresh();
+
+}
