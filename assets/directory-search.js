@@ -12,7 +12,7 @@
       const script = document.createElement('script');
       script.src = 'assets/directory-index.js';
       script.onload = () => resolve(window.directoryIndex.map(([name, town, county, href, aliases = '']) => ({
-        name, town, county, href, key:normalize(name), area:normalize(town+' '+county+' '+aliases)
+        name, town, county, href, key:normalize(name), townKey:normalize(town), countyKey:normalize(county), area:normalize(town+' '+county+' '+aliases)
       })));
       script.onerror = () => { loading = undefined; reject(new Error('index')); };
       document.head.append(script);
@@ -42,8 +42,12 @@
       if (seq !== version) return;
       const tokens = term.split(' ');
       const metroSearch = term === 'bucuresti' || term === 'bucuresti ilfov' || term === 'ilfov bucuresti';
-      results = metroSearch ? index.filter(r => ['București', 'Ilfov'].includes(r.county))
-        : index.filter(r => tokens.every(t => (r.key + ' ' + r.area).includes(t)));
+      const countyMatches = index.filter(row => row.countyKey === term);
+      const townMatches = index.filter(row => row.townKey === term);
+      if (metroSearch) results = index.filter(row => ['București', 'Ilfov'].includes(row.county));
+      else if (countyMatches.length) results = countyMatches;
+      else if (townMatches.length) results = townMatches;
+      else results = index.filter(row => tokens.every(token => (row.key + ' ' + row.area).includes(token)));
       function rank(r) { return r.key === term ? 0 : r.key.startsWith(term) ? 1 : r.key.includes(term) ? 2 : 3; }
       results.sort((a,b) => rank(a)-rank(b));
       status.textContent = results.length === 0 ? 'Nicio locație găsită. Încearcă numele localității sau alege un județ mai jos.'
